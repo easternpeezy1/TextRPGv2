@@ -18,6 +18,16 @@ import * as Shops            from './game/shops.js';
 let player = null;
 let currentEnemy = null;
 
+import { RoomNavigator } from './game/rooms/roomHandler.js';
+import { generateRooms } from './game/rooms/roomGenerator.js';
+
+function startExpedition() {
+  const rooms = generateRooms(10); // 10 rooms per run
+  const navigator = new RoomNavigator(player, UI, showMainMenu);
+  navigator.rooms = rooms;
+  navigator.displayRoom(rooms[0]);
+}
+
 function startGame() {
     showInput('Enter your survivor name:', name => {
         player = new Player(name);

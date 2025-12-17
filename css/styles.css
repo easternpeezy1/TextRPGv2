@@ -29,6 +29,13 @@ body {
     flex-direction: column;
 }
 
+.logo {
+    width: 200px; 
+    height: 200px; 
+    margin: 0 auto; 
+    display: block; 
+    }
+
 
 
 .game-screen {
