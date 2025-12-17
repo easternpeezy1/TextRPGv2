@@ -20,6 +20,7 @@ export class Player {
         this.goldCoins = 0;
         this.bottleCaps = 0;
         this.gold = 0;
+        this.statusEffects = [];
     }
 
     isAlive() {

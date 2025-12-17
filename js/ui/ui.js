@@ -9,18 +9,72 @@ const submitBtn = document.getElementById('submit-btn');
 
 let currentCallback = null;
 let currentMenuItems = [];
+let isProcessingAction = false; // Prevent double-clicking
+
+const TYPING_SPEED = 13; // milliseconds per character
+
+function typeMessage(element, text, callback) {
+    let index = 0;
+    element.innerHTML = '';
+    
+
+    const tokens = [];
+    let currentToken = '';
+    let i = 0;
+    
+    while (i < text.length) {
+        if (text[i] === '<') {
+
+            if (currentToken) tokens.push(currentToken);
+            currentToken = '';
+            let tagEnd = text.indexOf('>', i);
+            if (tagEnd !== -1) {
+                tokens.push(text.substring(i, tagEnd + 1));
+                i = tagEnd + 1;
+            } else {
+                i++;
+            }
+        } else {
+            currentToken += text[i];
+            i++;
+        }
+    }
+    if (currentToken) tokens.push(currentToken);
+    
+
+    function typeNextToken() {
+        if (index < tokens.length) {
+            element.innerHTML += tokens[index];
+            index++;
+            outputWindow.scrollTop = outputWindow.scrollHeight;
+            
+
+            const token = tokens[index - 1];
+            const delay = token.startsWith('<') ? 0 : TYPING_SPEED * token.length;
+            setTimeout(typeNextToken, delay);
+        } else {
+            if (callback) callback();
+        }
+    }
+    
+    typeNextToken();
+}
 
 function log(message, type = 'system') {
     const entry = document.createElement('div');
     entry.className = `log-entry ${type}`;
-    entry.innerHTML = message;
     outputWindow.appendChild(entry);
+    
+    // Use typing effect for all messages
+    typeMessage(entry, message, () => {
+        // After typing is done, scroll to bottom
+        outputWindow.scrollTop = outputWindow.scrollHeight;
+    });
     
     const entries = outputWindow.querySelectorAll('.log-entry');
     if (entries.length > 100) {
         entries[0].remove();
     }
-    outputWindow.scrollTop = outputWindow.scrollHeight;
 }
 
 function updateUI(player) {
@@ -62,6 +116,7 @@ function updateUI(player) {
 }
 
 function showInput(prompt, callback) {
+    isProcessingAction = false;
     currentCallback = callback;
     inputPrompt.textContent = prompt;
     inputField.value = '';
@@ -72,6 +127,7 @@ function showInput(prompt, callback) {
 }
 
 function showMenu(menuItems) {
+    isProcessingAction = false;
     menuOptions.innerHTML = '';
     inputContainer.classList.remove('active');
     menuContainer.style.display = 'block';
@@ -83,40 +139,49 @@ function showMenu(menuItems) {
         if (item.disabled) btn.disabled = true;
         
         btn.innerHTML = `<span class="btn-key">${item.key}</span> ${item.label}`;
-        btn.onclick = item.action;
+        btn.onclick = (e) => {
+            if (!isProcessingAction) {
+                isProcessingAction = true;
+                item.action();
+            }
+            e.preventDefault();
+        };
         
         menuOptions.appendChild(btn);
     });
 }
 
-// Keyboard event listener for menu hotkeys
 document.addEventListener('keydown', (e) => {
-    // Only trigger hotkeys when menu is visible and input is not focused
     if (menuContainer.style.display === 'block' && inputContainer.classList.contains('active') === false) {
+        if (isProcessingAction) return; // Prevent action spam
+        
         const key = e.key.toUpperCase();
         
-        // Find matching menu item
         const matchingItem = currentMenuItems.find(item => 
             item.key.toUpperCase() === key && !item.disabled
         );
         
         if (matchingItem) {
             e.preventDefault();
+            isProcessingAction = true;
             matchingItem.action();
         }
     }
 });
 
-// Event listeners for input
+
 submitBtn.onclick = () => {
     const val = inputField.value.trim();
-    if (val && currentCallback) {
+    if (val && currentCallback && !isProcessingAction) {
+        isProcessingAction = true;
         currentCallback(val);
     }
 };
 
 inputField.onkeydown = (e) => {
-    if (e.key === 'Enter') submitBtn.click();
+    if (e.key === 'Enter' && !isProcessingAction) {
+        submitBtn.click();
+    }
 };
 
 export { log, updateUI, showInput, showMenu };

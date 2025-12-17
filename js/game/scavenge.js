@@ -1,4 +1,6 @@
 import { Enemy } from '../classes/Enemy.js';
+import { rollForStrangerEncounter } from './encounters.js';
+import { handleStrangerEncounter } from './handleStrangerEncounter.js';
 
 export function showScavengeMenu(player, UI, showMainMenu) {
     const scavenges = [
@@ -46,6 +48,10 @@ export function showScavengeMenu(player, UI, showMainMenu) {
             }
         }
         UI.updateUI(player);
-        showMainMenu();
+        if (rollForStrangerEncounter()) {
+            handleStrangerEncounter(player, { log, updateUI, showInput, showMenu }, showMainMenu);
+        } else {
+            showMainMenu();
+        }
     });
 }

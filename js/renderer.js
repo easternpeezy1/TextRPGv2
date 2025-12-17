@@ -4,11 +4,16 @@ import { Enemy, Boss }       from './classes/Enemy.js';
 import { enemyPool, bossPool } from './classes/Enemy.js';
 import { traderItems, goldShopItems } from './data/shops.js'; 
 
+import { showIntro } from './game/intro.js';
+import { rollForStrangerEncounter } from './game/encounters.js';
+import { handleStrangerEncounter } from './game/handleStrangerEncounter.js';
+
 import { log, updateUI, showInput, showMenu } from './ui/ui.js';
 
 import * as Combat           from './game/combat.js';
 import * as Scavenge         from './game/scavenge.js';
 import * as Shops            from './game/shops.js';
+
 
 let player = null;
 let currentEnemy = null;
@@ -17,6 +22,7 @@ function startGame() {
     showInput('Enter your survivor name:', name => {
         player = new Player(name);
         log(`<strong>Welcome, ${player.name}!</strong> Your struggle begins…`, 'success');
+        showIntro(log);
         updateUI(player);
         showMainMenu();
     });
@@ -38,7 +44,6 @@ function showMainMenu() {
         { key: 'B', label: 'Lottery',              action: () => Shops.showLottery(player, { log, updateUI, showInput, showMenu }, showMainMenu) }
     ];
 
-    // secret admin menu (only for the dev name)
     if (player && player.name.toLowerCase() === 'jared') {
         menuItems.push({ key: '0', label: 'Admin Menu (Dev)', action: showAdminMenu });
     }
@@ -54,7 +59,12 @@ function rest() {
     player.rest();
     log('😴 You rest and recover your strength.', 'success');
     updateUI(player);
-    showMainMenu();
+    
+    if (rollForStrangerEncounter()) {
+        handleStrangerEncounter(player, { log, updateUI, showInput, showMenu }, showMainMenu);
+    } else {
+        showMainMenu();
+    }
 }
 
 function viewStatus() {
