@@ -45,8 +45,6 @@ export class Player {
             this.defense += 1;
             leveledUp = true;
         }
-        if (leveledUp) {
-            log(`🎉 You reached Level ${this.level}! Your survival instincts grow sharper!`, 'success');
-        }
+        return leveledUp ? `🎉 You reached Level ${this.level}!` : null;
     }
 }

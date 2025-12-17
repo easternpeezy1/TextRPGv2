@@ -1,5 +1,5 @@
 
-export const goldShopitems = [
+export const goldShopItems = [
     { name: 'Celestial Katana', price: 15, effect: function(p) { p.attack += 18; }, desc: '+18 ATK' },
     { name: 'Nano-Fiber Armor', price: 12, effect: function(p) { p.defense += 15; }, desc: '+15 DEF' },
     { name: 'Lucky Dice', price: 7, effect: function(p) { p.luck += 9; }, desc: '+9 LUCK' },
@@ -37,4 +37,12 @@ export const traderItems = [
     { name: 'Sniper Rifle', cost: 2000, effect: function(p) { p.attack += 60; }, desc: '+60 ATK' },
     { name: 'Machine Gun', cost: 5000, effect: function(p) { p.attack += 70; }, desc: '+70 ATK' },
     { name: 'Rocket Launcher', cost: 1250, effect: function(p) { p.attack += 80; }, desc: '+80 ATK' }
+];
+
+export const lotteryItems = [
+    { name: '50 Scrap', effect: (p) => { p.money += 50; } },
+    { name: '1 Gold Coin', effect: (p) => { p.goldCoins += 1; } },
+    { name: 'Small Prize', effect: (p) => { p.money += 25; } },
+    { name: '5 Bottle Caps', effect: (p) => { p.bottleCaps += 5; } },
+    { name: 'Health Pack', effect: (p) => { p.health = Math.min(p.maxHealth, p.health + 20); } }
 ];

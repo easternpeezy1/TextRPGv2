@@ -1,0 +1,33 @@
+# Ignore everything by default
+*
+!*/
+
+# Exclude specific folders
+node_modules/
+dist/
+build/
+
+# Exclude environment files
+.env
+.env.local
+
+
+# Exclude log files
+*.log
+
+# Exclude OS files
+.DS_Store
+Thumbs.db
+
+# Allow specific file types or files you're working with
+!*.py
+!*.js
+!*.java
+!*.json
+!*.html
+!*.gitignore
+!*.bat
+
+# Allow specific files by name
+!README.md
+!LICENSE

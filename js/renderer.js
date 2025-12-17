@@ -1,58 +1,41 @@
-// ---------------------------------------------------------------
-// renderer.js – runs inside the BrowserWindow (renderer process)
-// ---------------------------------------------------------------
-
-/* --------------------------------------------------------------
-    IMPORT ALL GAME MODULES
-   -------------------------------------------------------------- */
-//-- core classes -------------------------------------------------
 import { Player }            from './classes/Player.js';
 import { Enemy, Boss }       from './classes/Enemy.js';
 
-//-- static data (enemy pools, shop inventories, etc.) ---------
 import { enemyPool, bossPool } from './classes/Enemy.js';
-import { traderItems, goldShopItems } from './data/shops.js'; // add lotteryItems later for lotto
+import { traderItems, goldShopItems } from './data/shops.js'; 
 
-//-- UI helpers --------------------------------------------------
-import * as UI               from './ui/ui.js';      // log, updateUI, showInput, showMenu, …
-import * as Menus            from './ui/menu.js';   // optional extra menu helpers
+import { log, updateUI, showInput, showMenu } from './ui/ui.js';
 
-//-- game‑logic modules ------------------------------------------
 import * as Combat           from './game/combat.js';
 import * as Scavenge         from './game/scavenge.js';
 import * as Shops            from './game/shops.js';
 
-
-let player = null;          // the Player instance
-let currentEnemy = null;    // the Enemy/Boss we are fighting
-
+let player = null;
+let currentEnemy = null;
 
 function startGame() {
-    UI.showInput('Enter your survivor name:', name => {
+    showInput('Enter your survivor name:', name => {
         player = new Player(name);
-        UI.log(`<strong>Welcome, ${player.name}!</strong> Your struggle begins…`, 'success');
-        UI.updateUI(player);
+        log(`<strong>Welcome, ${player.name}!</strong> Your struggle begins…`, 'success');
+        updateUI(player);
         showMainMenu();
     });
 }
 
-/* ----------------------------------------------------------------
-   Main Outpost menu (calls into the other modules)
-   ---------------------------------------------------------------- */
 function showMainMenu() {
-    UI.log('<br>--- Survivor Outpost ---', 'system');
+    log('<br>--- Survivor Outpost ---', 'system');
 
     const menuItems = [
         { key: '1', label: 'Face a threat',        action: startCombat, disabled: player.stamina < 2 },
-        { key: '2', label: 'Scavenge for loot',    action: Scavenge.showScavengeMenu },
+        { key: '2', label: 'Scavenge for loot',    action: () => Scavenge.showScavengeMenu(player, { log, updateUI, showInput, showMenu }, showMainMenu) },
         { key: '3', label: 'Pursue Boss',          action: pursueBoss },
-        { key: '4', label: 'Trade with merchant',   action: Shops.showTraderMenu },
-        { key: 'R', label: 'Rest',                 action: rest },
+        { key: '4', label: 'Trade with merchant',  action: () => Shops.showTraderMenu(player, { log, updateUI, showInput, showMenu }, showMainMenu) },
+        { key: '5', label: 'Rest',                 action: rest },
         { key: 'C', label: 'View Status',          action: viewStatus },
         { key: 'S', label: 'Save Game',            action: saveGame },
         { key: 'L', label: 'Load Game',            action: loadGame },
-        { key: 'G', label: 'Gold Shop',            action: Shops.showGoldShop },
-        { key: 'B', label: 'Lottery',              action: Shops.showLottery }
+        { key: 'G', label: 'Gold Shop',            action: () => Shops.showGoldShop(player, { log, updateUI, showInput, showMenu }, showMainMenu) },
+        { key: 'B', label: 'Lottery',              action: () => Shops.showLottery(player, { log, updateUI, showInput, showMenu }, showMainMenu) }
     ];
 
     // secret admin menu (only for the dev name)
@@ -60,74 +43,63 @@ function showMainMenu() {
         menuItems.push({ key: '0', label: 'Admin Menu (Dev)', action: showAdminMenu });
     }
 
-    UI.showMenu(menuItems);
+    showMenu(menuItems);
 }
 
-/* ----------------------------------------------------------------
-   Combat – thin wrapper that forwards to the combat module
-   ---------------------------------------------------------------- */
 function startCombat() {
-    Combat.startCombat(player, UI, showMainMenu); // you can also pass enemyPool if you like
+    Combat.startCombat(player, { log, updateUI, showInput, showMenu }, showMainMenu);
 }
 
-/* ----------------------------------------------------------------
-   Rest, view status, save / load, admin – tiny UI wrappers
-   ---------------------------------------------------------------- */
 function rest() {
     player.rest();
-    UI.log('💤 You rest and recover your strength.', 'success');
-    UI.updateUI(player);
+    log('😴 You rest and recover your strength.', 'success');
+    updateUI(player);
     showMainMenu();
 }
 
 function viewStatus() {
-    UI.log('<br>📊 <strong>CHARACTER STATUS</strong>', 'system');
-    UI.log(`Name: ${player.name} | Level: ${player.level}`, 'system');
-    UI.log(`HP: ${player.health}/${player.maxHealth}`, 'system');
-    UI.log(`Stamina: ${player.stamina}/${player.maxStamina}`, 'system');
-    UI.log(`Energy: ${player.energy}/${player.maxEnergy}`, 'system');
-    UI.log(`ATK: ${player.attack} | DEF: ${player.defense} | LUCK: ${player.luck}`, 'system');
-    UI.log(`Scrap: $${player.money} | Gold Coins: ${player.goldCoins} | Bottle Caps: ${player.bottleCaps}`, 'system');
-    UI.log(`EXP: ${player.exp}/${player.level * 20}`, 'system');
+    log('<br>📊 <strong>CHARACTER STATUS</strong>', 'system');
+    log(`Name: ${player.name} | Level: ${player.level}`, 'system');
+    log(`HP: ${player.health}/${player.maxHealth}`, 'system');
+    log(`Stamina: ${player.stamina}/${player.maxStamina}`, 'system');
+    log(`Energy: ${player.energy}/${player.maxEnergy}`, 'system');
+    log(`ATK: ${player.attack} | DEF: ${player.defense} | LUCK: ${player.luck}`, 'system');
+    log(`Scrap: $${player.money} | Gold Coins: ${player.goldCoins} | Bottle Caps: ${player.bottleCaps}`, 'system');
+    log(`EXP: ${player.exp}/${player.level * 20}`, 'system');
     const inv = player.inventory.map(i => typeof i === 'string' ? i : i.name).join(', ') || 'Empty';
-    UI.log(`Inventory: ${inv}`, 'system');
+    log(`Inventory: ${inv}`, 'system');
     showMainMenu();
 }
 
-/* --------------------------------------------------------------
-   Save / Load (still using localStorage – you’ll swap later)
-   -------------------------------------------------------------- */
 function saveGame() {
     try {
         localStorage.setItem('apocalypseRPG_save', JSON.stringify(player));
-        UI.log('💾 Game saved successfully!', 'success');
+        log('💾 Game saved successfully!', 'success');
     } catch (e) {
-        UI.log('❌ Save failed: ' + e.message, 'warning');
+        log('❌ Save failed: ' + e.message, 'warning');
     }
     showMainMenu();
 }
+
 function loadGame() {
     try {
         const raw = localStorage.getItem('apocalypseRPG_save');
         if (!raw) {
-            UI.log('❌ No saved game found.', 'warning');
+            log('❌ No saved game found.', 'warning');
             showMainMenu();
             return;
         }
         const data = JSON.parse(raw);
         player = new Player(data.name);
         Object.assign(player, data);
-        UI.log('✅ Game loaded!', 'success');
-        UI.updateUI(player);
+        log('✅ Game loaded!', 'success');
+        updateUI(player);
     } catch (e) {
-        UI.log('❌ Load error: ' + e.message, 'warning');
+        log('❌ Load error: ' + e.message, 'warning');
     }
     showMainMenu();
 }
 
-/* --------------------------------------------------------------
-   Admin / Debug (only appears for the dev name)
-   -------------------------------------------------------------- */
 function showAdminMenu() {
     const adminOpts = [
         { key: '1', label: 'Set Health',        action: () => numericPrompt('Health', v => player.health = Math.min(v, player.maxHealth)) },
@@ -143,54 +115,49 @@ function showAdminMenu() {
         { key: 'B', label: 'Set Attack',       action: () => numericPrompt('Attack', v => player.attack = v) },
         { key: 'C', label: 'Set Defense',      action: () => numericPrompt('Defense', v => player.defense = v) },
         { key: 'D', label: 'Set Luck',         action: () => numericPrompt('Luck', v => player.luck = v) },
-        { key: 'E', label: 'Max All Stats',    action: () => { player.health = player.maxHealth; player.stamina = player.maxStamina; player.energy = player.maxEnergy; } },
+        { key: 'E', label: 'Max All Stats',    action: () => { player.health = player.maxHealth; player.stamina = player.maxStamina; player.energy = player.maxEnergy; UI.updateUI(player); } },
         { key: '0', label: 'Back to Main Menu',action: showMainMenu }
     ];
-    UI.showMenu(adminOpts);
+    showMenu(adminOpts);
 }
+
 function numericPrompt(label, applyFn) {
-    UI.showInput(`Set ${label} to:`, val => {
+    showInput(`Set ${label} to:`, val => {
         const num = parseInt(val, 10);
         if (isNaN(num) || num < 0) {
-            UI.log('❌ Invalid number.', 'warning');
+            log('❌ Invalid number.', 'warning');
         } else {
             applyFn(num);
-            UI.log(`${label} set to ${num}.`, 'success');
-            UI.updateUI(player);
+            log(`${label} set to ${num}.`, 'success');
+            updateUI(player);
         }
         showAdminMenu();
     });
 }
 
-/* --------------------------------------------------------------
-   Boss pursuit – uses the bossPool exported from enemies.js
-   -------------------------------------------------------------- */
 function pursueBoss() {
     if (player.level < 5) {
-        UI.log('⚠️ You need to be at least level 5 to pursue a boss!', 'warning');
+        log('⚠️ You need to be at least level 5 to pursue a boss!', 'warning');
         showMainMenu();
         return;
     }
 
-    UI.log('<br>🎯 Choose a boss to pursue:', 'system');
-    bossPool.forEach((b, i) => UI.log(`[${i + 1}] ${b.name} (Lv ${b.level}) – ${b.uniqueDrop.name}`, 'system'));
+    log('<br>🎯 Choose a boss to pursue:', 'system');
+    bossPool.forEach((b, i) => log(`[${i + 1}] ${b.name} (Lv ${b.level}) – ${b.uniqueDrop.name}`, 'system'));
 
-    UI.showInput(`Pick a boss (1‑${bossPool.length}, or 0 to cancel):`, choice => {
+    showInput(`Pick a boss (1–${bossPool.length}, or 0 to cancel):`, choice => {
         const idx = parseInt(choice, 10) - 1;
         if (isNaN(idx) || idx < 0 || idx >= bossPool.length) {
             showMainMenu();
             return;
         }
         currentEnemy = bossPool[idx];
-        UI.log(`<br>💀 You face the fearsome ${currentEnemy.name}!`, 'combat');
-        UI.log(`Boss HP: ${currentEnemy.health}/${currentEnemy.maxHealth} | ATK: ${currentEnemy.attack} | DEF: ${currentEnemy.defense}`, 'combat');
-        Combat.startCombat(player, UI, showMainMenu, currentEnemy); // pass the pre‑created boss
+        log(`<br>💀 You face the fearsome ${currentEnemy.name}!`, 'combat');
+        log(`Boss HP: ${currentEnemy.health}/${currentEnemy.maxHealth} | ATK: ${currentEnemy.attack} | DEF: ${currentEnemy.defense}`, 'combat');
+        Combat.startCombat(player, { log, updateUI, showInput, showMenu }, showMainMenu, currentEnemy);
     });
 }
 
-/* --------------------------------------------------------------
-   Bootstrap – start the game once the page is ready
-   -------------------------------------------------------------- */
 window.addEventListener('DOMContentLoaded', () => {
     console.log('=== renderer.js loaded (module) ===');
     startGame();
