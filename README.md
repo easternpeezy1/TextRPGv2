@@ -1,4 +1,4 @@
-# ⚠️ Apocalypse RPG - Survive the Wasteland
+# ⚠️ REMNANT: A Text-Based Surivival RPG
 
 A text-based survival RPG built with Electron where you fight zombies, bandits, and bosses in a post-apocalyptic world.
 
@@ -28,10 +28,10 @@ A text-based survival RPG built with Electron where you fight zombies, bandits, 
 
 ```bash
 # Clone the repository
-git clone https://github.com/easternpeezy1/TextRPGv2.git
+git clone https://github.com/easternpeezy1/REMNANT-A-Text-Based-Survival-RPG
 
 # Navigate to the project directory
-cd TextRPGv2
+cd REMNANT-A-Text-Based-Survival-RPG
 
 # Install dependencies
 npm install
@@ -97,25 +97,41 @@ Executables will be created in the `dist` folder.
 ## 📁 Project Structure
 
 ```
-TextRPGv2/
-├── index.html           # Main HTML interface
-├── main.js             # Electron main process
-├── renderer.js         # Game initialization and main menu
-├── package.json        # Project configuration
+remnants-a-text-based-survival-rpg/
+├── index.html                 # Main HTML entry point
+├── main.js                    # Electron app launcher
+├── package.json               # Dependencies & build config
+├── start-game.bat            # Windows game launcher
+│
 ├── css/
-│   └── styles.css      # Game styling
-└── js/
-    ├── classes/
-    │   ├── Player.js   # Player class and methods
-    │   └── Enemy.js    # Enemy and Boss classes
-    ├── data/
-    │   └── shops.js    # Shop inventories
-    ├── game/
-    │   ├── combat.js   # Combat system
-    │   ├── scavenge.js # Scavenging mechanics
-    │   └── shops.js    # Shop interactions
-    └── ui/
-        └── ui.js       # UI helper functions
+│   └── styles.css            # All game styling
+│
+├── js/
+│   ├── renderer.js           # Main game logic & event handling
+│   │
+│   ├── classes/
+│   │   ├── Player.js         # Player class with stats & methods
+│   │   └── Enemy.js          # Enemy & Boss classes
+│   │
+│   ├── data/
+│   │   └── shops.js          # Item definitions & prices
+│   │
+│   ├── game/
+│   │   ├── combat.js         # Combat system & round logic
+│   │   ├── scavenge.js       # Scavenging missions
+│   │   ├── shops.js          # Shop menu logic
+│   │   ├── intro.js          # Opening narrative
+│   │   ├── encounters.js     # Encounter chance system
+│   │   ├── strangers.js      # NPC encounter variants
+│   │   ├── handleStrangerEncounter.js  # Encounter menu logic
+│   │   ├── resolveHelp.js    # Encounter resolution
+│   │   └── statusEffects.js  # Status effect system
+│   │
+│   └── ui/
+│       └── ui.js             # UI rendering & hotkey handling
+│
+└── game-icon.ico             # Game launcher icon
+
 ```
 
 ## 🐛 Known Issues
